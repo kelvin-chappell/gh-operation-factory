@@ -15,6 +15,11 @@ observed evidence for the runbook's gates; instructions alone enforce nothing.
 2. Supply the intent, the two skill directories and an approved output directory
    outside this checkout. Skills are operation inputs, not installed factory skills.
    If either is missing, preparation remains a draft.
+   New repositories use `operation-<UTC timestamp>-<intent slug>`, without a
+   random suffix.
+   The Creator proposes the exact directory for approval, preserves the instance
+   identity on resume and refuses collisions. Definitions record their factory
+   provenance; published repositories also carry factory topics and a README notice.
 3. Answer the Creator's focused questions about scope, goal, milestones, limits,
    privacy, sampling and where to stop. It recommends answers and resolves conflicts
    using the [skill contract](templates/operation/SKILLS.md).
@@ -36,7 +41,7 @@ Example request:
 Prepare an operation to upgrade our Scala repositories.
 Exploration skill: /approved/scala-exploration
 Action skill: /approved/scala-upgrade
-Output: /approved/scala-operation
+Output: /approved/operation-20261016T151019Z-scala-upgrade
 Stop after exploration; do not run target discovery here.
 ```
 

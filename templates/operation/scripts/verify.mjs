@@ -17,6 +17,10 @@ const containers = ['.devcontainer/devenv.yaml', '.devcontainer/shared/devcontai
 const packages = ['.github/skills/explore/', '.github/skills/act/'];
 const schema = {
   id: 'text', intent: 'text', operator: 'text', delegates: ['text'],
+  provenance: {
+    factoryRepository: 'text', factoryRevision: 'text', factoryDiffSha256: 'text',
+    createdAt: 'text', instanceId: 'text',
+  },
   scope: { owners: ['text'], repositories: ['text'], exclude: ['text'], visibility: 'text' },
   goal: 'text', milestones: ['text'],
   bounds: { allowedPaths: ['text'], forbiddenChanges: ['text'] },
@@ -35,6 +39,30 @@ const schema = {
   },
   records: { visibility: 'text', artifactLocation: 'text', retentionDays: 'integer' },
 };
+
+function identityErrors(settings) {
+  const errors = [];
+  if (typeof settings?.id !== 'string' || !/^[a-z0-9][a-z0-9-]{0,72}$/.test(settings.id)) {
+    errors.push('id: use a lowercase slug of at most 73 characters');
+  }
+  const { createdAt, instanceId } = settings?.provenance ?? {};
+  if (typeof createdAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(createdAt) ||
+      !Number.isFinite(Date.parse(createdAt)) ||
+      new Date(createdAt).toISOString().replace('.000Z', 'Z') !== createdAt) {
+    errors.push('provenance.createdAt: use a valid UTC timestamp YYYY-MM-DDTHH:mm:ssZ');
+  }
+  if (typeof instanceId !== 'string' ||
+      !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(instanceId)) {
+    errors.push('provenance.instanceId: use a lowercase UUID v4');
+  }
+  return errors;
+}
+
+export function operationRepositoryName(settings) {
+  const errors = identityErrors(settings);
+  if (errors.length) throw new TypeError(errors.join('; '));
+  return `operation-${settings.provenance.createdAt.replace(/[-:]/g, '')}-${settings.id}`;
+}
 
 function checkShape(value, spec, path, errors) {
   if (Array.isArray(spec)) {
@@ -75,7 +103,7 @@ export function validateSettings(settings) {
   checkShape(settings, schema, 'operation', errors);
   if (errors.length) return errors;
   const { scope, limits, controls, records, milestones } = settings;
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(settings.id)) errors.push('id: use a lowercase slug');
+  errors.push(...identityErrors(settings));
   if (!['public', 'private'].includes(scope.visibility)) errors.push('scope.visibility: public or private');
   if (!['public', 'private'].includes(records.visibility)) errors.push('records.visibility: public or private');
   if (scope.visibility === 'private' && records.visibility !== 'private') {
@@ -84,6 +112,15 @@ export function validateSettings(settings) {
   if (!scope.owners.length && !scope.repositories.length) errors.push('scope: specify owners or repositories');
   const ownerPattern = /^[A-Za-z0-9][A-Za-z0-9-]*$/;
   const repoPattern = /^[A-Za-z0-9][A-Za-z0-9-]*\/[A-Za-z0-9_.-]+$/;
+  if (!repoPattern.test(settings.provenance.factoryRepository)) {
+    errors.push('provenance.factoryRepository: expected owner/repository');
+  }
+  if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(settings.provenance.factoryRevision)) {
+    errors.push('provenance.factoryRevision: expected exact Git revision');
+  }
+  if (!/^[a-f0-9]{64}$/.test(settings.provenance.factoryDiffSha256)) {
+    errors.push('provenance.factoryDiffSha256: expected SHA-256 of git diff --binary HEAD');
+  }
   if (scope.owners.some(owner => !ownerPattern.test(owner))) errors.push('scope.owners: invalid owner');
   if ([...scope.repositories, ...scope.exclude].some(repo => !repoPattern.test(repo))) {
     errors.push('scope repositories/exclude: expected owner/repository');
@@ -226,6 +263,7 @@ export function verify(rootPath, { template = false, base } = {}) {
       }
     }
   }
+  let repositoryName;
   if (files.includes('operation.json')) {
     let settings;
     try {
@@ -233,7 +271,11 @@ export function verify(rootPath, { template = false, base } = {}) {
     } catch (error) {
       errors.push(`operation.json: ${error.message}`);
     }
-    if (settings !== undefined && !template) errors.push(...validateSettings(settings));
+    if (settings !== undefined && !template) {
+      const settingsErrors = validateSettings(settings);
+      errors.push(...settingsErrors);
+      if (!settingsErrors.length) repositoryName = operationRepositoryName(settings);
+    }
   }
   if (base) {
     const baseRoot = resolve(base);
@@ -249,6 +291,7 @@ export function verify(rootPath, { template = false, base } = {}) {
   return {
     ok: errors.length === 0, kind: template ? 'template' : 'definition',
     digest: `sha256:${digest.digest('hex')}`, files, errors,
+    ...(repositoryName ? { repositoryName } : {}),
   };
 }
 

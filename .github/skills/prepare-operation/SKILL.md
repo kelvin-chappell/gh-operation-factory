@@ -12,8 +12,25 @@ directory outside this checkout. Use [the skill contract](../../../templates/ope
 to inspect the packages as data before loading any instructions. Missing skills
 permit drafting only. Preparation never runs live discovery, target code or actions.
 
+For a new instance, choose a lowercase intent `id` of at most 73 characters,
+capture its creation time once as UTC `YYYY-MM-DDTHH:mm:ssZ`, and generate a
+cryptographically random UUID v4 once. Populate `operation.json.provenance` with
+those values, this factory's actual owner/repository, exact Git revision and the
+SHA-256 of `git diff --binary HEAD` (including the empty diff). Account separately
+for any untracked factory source before claiming its identity is complete.
+The local checker owns name derivation and reports `repositoryName`:
+`operation-<YYYYMMDDTHHMMSSZ>-<id>`. Keep the UUID in provenance, not the name.
+Use it for the proposed local directory and optional GitHub repository; obtain
+approval of the exact destination. A timestamp does not guarantee
+uniqueness: refuse an existing destination rather than overwriting it, adopting it
+or regenerating identity to disguise a collision.
+
 For resumption, verify the existing workspace's provenance and inventory; preserve
-its records. Unexpected files or a conflicting destination require an operator
+its records, instance UUID, creation time and intent id. A moved checkout does not
+change identity. Source revision/diff identify the selected definition's factory
+base; record a base update as a revision, not a new instance. An older operation
+without provenance needs an explicitly approved migration with documented original
+creation-time evidence; never silently reinitialise it. Unexpected files or a conflicting destination require an operator
 decision, not overwrite or cleanup. For an explicitly selected predecessor, import
 only reviewed settings and skill sources, never live records or ownership.
 
@@ -77,5 +94,9 @@ visibility and contents; follow [review-change](../review-change/SKILL.md) befor
 any pull request. Journal intended and observed resource identities, verify settings
 after creation, and resume only demonstrably owned resources. A name collision or
 uncertain partial result blocks publication without affecting existing resources.
+Use the checker's dated name and apply the GitHub topics `gh-operation` and
+`gh-operation-factory`; verify them after separately authorised publication.
+The shared README supplies the visible factory-origin notice. Names, topics and
+provenance are discovery markers, not ownership proof or execution permission.
 Private inputs require an equally restricted destination; public reuse requires a
 reviewed sanitised export. Repository creation never activates target work.

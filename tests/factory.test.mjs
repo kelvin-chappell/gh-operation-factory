@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { headings, validateSettings, verify } from '../templates/operation/scripts/verify.mjs';
+import { headings, operationRepositoryName, validateSettings, verify } from '../templates/operation/scripts/verify.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const base = resolve(root, 'templates/operation');
@@ -15,6 +15,13 @@ const base = resolve(root, 'templates/operation');
 function settings() {
   return {
     id: 'synthetic-operation', intent: 'Exercise local packaging', operator: 'test-operator',
+    provenance: {
+      factoryRepository: 'kelvin-chappell/gh-operation-factory',
+      factoryRevision: 'a'.repeat(40),
+      factoryDiffSha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      createdAt: '2026-10-16T15:10:19Z',
+      instanceId: 'a1b2c3d4-1234-4abc-8def-123456789abc',
+    },
     delegates: [], scope: { owners: ['example'], repositories: [], exclude: [], visibility: 'public' },
     goal: 'All acceptance checks pass', milestones: ['initial', 'final'],
     bounds: { allowedPaths: ['src/**'], forbiddenChanges: ['dependencies'] },
@@ -78,6 +85,36 @@ test('complete synthetic definition passes and has a stable digest', t => {
   assert.match(first.digest, /^sha256:[a-f0-9]{64}$/);
   assert.equal(verify(directory).digest, first.digest);
   assert.ok(first.files.includes('.github/skills/act/SKILL.md'));
+  assert.equal(first.repositoryName, 'operation-20261016T151019Z-synthetic-operation');
+});
+
+test('repository naming is stable across resume and independent of checkout location', () => {
+  const value = settings();
+  const name = operationRepositoryName(value);
+  assert.equal(operationRepositoryName(JSON.parse(JSON.stringify(value))), name);
+  value.provenance.factoryRevision = 'b'.repeat(40);
+  assert.equal(operationRepositoryName(value), name);
+  value.provenance.instanceId = 'b1b2c3d4-1234-4abc-8def-123456789abc';
+  assert.equal(operationRepositoryName(value), name);
+  value.provenance.createdAt = '2026-10-16T15:10:20Z';
+  assert.notEqual(operationRepositoryName(value), name);
+});
+
+test('repository names fit the GitHub limit without silent slug truncation', () => {
+  const value = settings();
+  value.id = 'a'.repeat(73);
+  assert.equal(operationRepositoryName(value).length, 100);
+  value.id += 'a';
+  assert.throws(() => operationRepositoryName(value), /at most 73/);
+});
+
+test('provenance is part of the approved definition digest', t => {
+  const directory = bundle(t);
+  const before = verify(directory).digest;
+  change(directory, 'operation.json', text => text.replace('a'.repeat(40), 'b'.repeat(40)));
+  const after = verify(directory, { base });
+  assert.equal(after.ok, true, after.errors.join('\n'));
+  assert.notEqual(after.digest, before);
 });
 
 test('factory template cannot embed operation-specific skills', t => {
@@ -151,6 +188,16 @@ test('root directory symlinks are rejected', t => {
 });
 
 const invalidSettings = [
+  ['missing provenance', value => { delete value.provenance; }, /provenance: expected object/],
+  ['invalid factory repository', value => { value.provenance.factoryRepository = 'unknown'; }, /expected owner\/repository/],
+  ['floating factory revision', value => { value.provenance.factoryRevision = 'main'; }, /exact Git revision/],
+  ['invalid factory diff', value => { value.provenance.factoryDiffSha256 = 'unknown'; }, /expected SHA-256/],
+  ['invalid instance', value => { value.provenance.instanceId = 'not-a-uuid'; }, /UUID v4/],
+  ['non-v4 instance', value => { value.provenance.instanceId = 'a1b2c3d4-1234-1abc-8def-123456789abc'; }, /UUID v4/],
+  ['offset creation time', value => { value.provenance.createdAt = '2026-10-16T15:10:19+00:00'; }, /UTC timestamp/],
+  ['fractional creation time', value => { value.provenance.createdAt = '2026-10-16T15:10:19.123Z'; }, /UTC timestamp/],
+  ['invalid calendar date', value => { value.provenance.createdAt = '2026-02-30T15:10:19Z'; }, /UTC timestamp/],
+  ['overlong intent slug', value => { value.id = 'a'.repeat(74); }, /at most 73/],
   ['unknown field', value => { value.controller = true; }, /unexpected setting/],
   ['missing value', value => { delete value.goal; }, /goal: expected text/],
   ['null limit', value => { value.limits.aiCredits = null; }, /aiCredits: expected positive/],

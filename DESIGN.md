@@ -30,8 +30,11 @@ The root README owns human factory startup. The preparation skill owns assembly 
 handover. The skill contract owns input assessment. `CONTEXT.md` owns vocabulary.
 This file owns architecture, not a second procedure or policy manual.
 
-The generated README owns operation startup. `operation.json` owns values, not
-procedure. `RUNBOOK.md` owns execution and authority rules. `RECORDS.md` owns record
+The generated README owns operation startup and the visible factory-origin notice.
+`operation.json` owns values, including instance provenance, not procedure. The
+checker owns dated repository-name derivation and provenance structural rules;
+preparation owns identity creation, collision handling and publication topics.
+`RUNBOOK.md` owns execution and authority rules. `RECORDS.md` owns record
 formats and diagnostic navigation. Agent profiles and `AGENTS.md` are routing
 pointers. The review skill owns pre-publication review; both workspaces contain the
 same copy so each works independently.

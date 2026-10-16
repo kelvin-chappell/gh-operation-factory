@@ -1,5 +1,12 @@
 {
   "id": "{{operation_id}}",
+  "provenance": {
+    "factoryRepository": "kelvin-chappell/gh-operation-factory",
+    "factoryRevision": "{{factory_git_revision}}",
+    "factoryDiffSha256": "{{factory_binary_diff_sha256}}",
+    "createdAt": "{{instance_creation_time_utc}}",
+    "instanceId": "{{instance_uuid_v4}}"
+  },
   "intent": "{{intent}}",
   "operator": "{{operator_identity}}",
   "delegates": [],

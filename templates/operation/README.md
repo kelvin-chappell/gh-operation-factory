@@ -1,5 +1,10 @@
 # Run this operation
 
+Created by [gh-operation-factory](https://github.com/kelvin-chappell/gh-operation-factory).
+The `provenance` in [operation.json](operation.json) records this instance and its
+factory source. The checker reports its dated repository name. These markers aid
+discovery; they do not establish ownership, approval or authority.
+
 This repository contains one operation. Its initial state is **inactive**.
 
 1. Open the repository in its dev container. Start a Copilot session and select
