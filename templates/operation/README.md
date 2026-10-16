@@ -1,21 +1,29 @@
-# {{operation_name}}
+# Run this operation
 
-**Standing: inactive.** This repository defines exactly one operation. Creation and
-structural checks do not authorise target work.
+This repository contains one operation. Its initial state is **inactive**.
 
-Read [the definition](OPERATION.md), [shared context](CONTEXT.md) and
-[governance](GOVERNANCE.md). [The manifest](MANIFEST.md) inventories the definition.
-Agents start with [AGENTS.md](AGENTS.md).
+1. Open the repository in its dev container. Start a Copilot session and select
+   `supervisor`.
+2. Read [operation.json](operation.json) for the approved values and
+   [RUNBOOK.md](RUNBOOK.md) for the shared procedure. Inspect the factory assessment,
+   approval and any blockers in `records/`.
+3. Run `mise exec -- node scripts/verify.mjs .`. A package pass does not establish
+   execution readiness.
+4. Ask the Supervisor to verify readiness and report the proposed mode, sample and
+   stop boundary. Authorise the exact definition and permitted activity explicitly.
+5. Follow progress in `records/progress.md`. To pause, change a boundary, troubleshoot
+   or resume, use the controls in the runbook. [RECORDS.md](RECORDS.md) explains the
+   evidence behind each reported result.
 
-All work starts within a Copilot session in a dev container. Container creation
-supplies Copilot and `gh`; they are not declared in `.tool-versions`. Select the
-appropriate local agent in the session. GitHub Actions does not trigger operation
-processes, and opening a session does not activate the operation.
+Example session instruction:
 
-Review required context, local references and unresolved fields within the session.
-Target execution remains blocked until governance requirements have been verified
-and the operator separately authorises activation.
+```text
+Verify readiness and report blockers. Once I authorise exploration, inspect the
+configured sample read-only and stop after exploration. Do not perform actions.
+```
 
-Definitions are approved as a whole, including agents, skills and container configuration.
-Operational records belong on a separate restricted records branch, not in reused
-definitions. The associated board records target stages and standings.
+The supplied [exploration](.github/skills/explore/SKILL.md) and
+[action](.github/skills/act/SKILL.md) packages contain domain work, not lifecycle
+policy. [SKILLS.md](SKILLS.md) owns their assessment contract, including replacements.
+No return to the factory is needed. Real blockers, human review and resource
+limits can prevent completion; a stopped or sampled run is not a completed operation.

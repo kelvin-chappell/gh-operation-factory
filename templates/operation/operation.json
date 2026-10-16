@@ -1,0 +1,52 @@
+{
+  "id": "{{operation_id}}",
+  "intent": "{{intent}}",
+  "operator": "{{operator_identity}}",
+  "delegates": [],
+  "scope": {
+    "owners": ["{{owner}}"],
+    "repositories": [],
+    "exclude": [],
+    "visibility": "{{public_or_private}}"
+  },
+  "goal": "{{final_acceptance_description}}",
+  "milestones": ["{{initial_milestone}}", "{{final_milestone}}"],
+  "bounds": {
+    "allowedPaths": ["{{path_pattern}}"],
+    "forbiddenChanges": ["{{forbidden_change}}"]
+  },
+  "limits": {
+    "aiCredits": null,
+    "reserveCredits": null,
+    "maxMinutes": null,
+    "maxActions": null,
+    "maxAttempts": null,
+    "maxTransientRetries": null,
+    "retryBackoffSeconds": null,
+    "maxBackoffSeconds": null
+  },
+  "controls": {
+    "mode": "inspect",
+    "stopAfter": "exploration",
+    "stopMilestone": null,
+    "sample": {
+      "discoveryLimit": null,
+      "size": null,
+      "seed": "{{reproducible_seed}}",
+      "strata": ["{{coverage_dimension}}"]
+    }
+  },
+  "environment": {
+    "tools": ["{{required_tool_and_version}}"],
+    "isolation": "{{how_effective_configuration_and_execution_are_isolated}}",
+    "claims": "{{verified_exclusive_claim_mechanism}}",
+    "usage": "{{authoritative_attributable_credit_source}}",
+    "publication": "{{independent_prepublication_check_mechanism}}",
+    "modelDataPolicy": "{{approved_model_and_data_handling_evidence}}"
+  },
+  "records": {
+    "visibility": "{{public_or_private}}",
+    "artifactLocation": "{{restricted_artifact_store}}",
+    "retentionDays": null
+  }
+}
